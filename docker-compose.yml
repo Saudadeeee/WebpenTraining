@@ -1,0 +1,179 @@
+version: '3.8'
+
+services:
+  # =============== Task2: Binary Search (Blind SQLi) ===============
+  task2-web:
+    build:
+      context: ./Task2_BinarySearch/web
+      dockerfile: Dockerfile
+    container_name: task2-web
+    ports:
+      - "8002:80"
+    environment:
+      DB_HOST: task2-db
+      DB_USER: root
+      DB_PASSWORD: password
+      DB_NAME: blind_sqli_db
+    depends_on:
+      - task2-db
+    networks:
+      - task2-net
+
+  task2-db:
+    image: mysql:8.0
+    container_name: task2-db
+    ports:
+      - "3302:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: blind_sqli_db
+    volumes:
+      - ./Task2_BinarySearch/db/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - task2-db-data:/var/lib/mysql
+    networks:
+      - task2-net
+
+  # =============== Task3: SQLMap ROT13 ===============
+  task3-web:
+    build:
+      context: ./Task3_SQLMap_ROT13/web
+      dockerfile: Dockerfile
+    container_name: task3-web
+    ports:
+      - "8003:80"
+    environment:
+      DB_HOST: task3-db
+      DB_USER: root
+      DB_PASSWORD: password
+      DB_NAME: rot13_db
+    depends_on:
+      - task3-db
+    networks:
+      - task3-net
+
+  task3-db:
+    image: mysql:8.0
+    container_name: task3-db
+    ports:
+      - "3303:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: rot13_db
+    volumes:
+      - ./Task3_SQLMap_ROT13/db/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - task3-db-data:/var/lib/mysql
+    networks:
+      - task3-net
+
+  # =============== Task4: RCE MSSQL - Case 1 (Same Server) ===============
+  task4-case1-web:
+    build:
+      context: ./Task4_RCE_MSSQL/case1_same_server
+      dockerfile: Dockerfile
+    container_name: task4-case1-web
+    ports:
+      - "8051:80"
+    environment:
+      MSSQL_SA_PASSWORD: "P@ssw0rd123!"
+      ACCEPT_EULA: "Y"
+    depends_on:
+      task4-case1-mssql:
+        condition: service_started
+    networks:
+      - task4-case1-net
+
+  task4-case1-mssql:
+    image: mcr.microsoft.com/mssql/server:2019-latest
+    container_name: task4-case1-mssql
+    ports:
+      - "14331:1433"
+    environment:
+      SA_PASSWORD: "P@ssw0rd123!"
+      ACCEPT_EULA: "Y"
+    volumes:
+      - ./Task4_RCE_MSSQL/case1_same_server/init_db.sql:/docker-entrypoint-initdb.d/init.sql
+      - task4-case1-data:/var/opt/mssql/data
+    networks:
+      - task4-case1-net
+
+  # =============== Task4: RCE MSSQL - Case 2 (Different Server) ===============
+  task4-case2-web:
+    build:
+      context: ./Task4_RCE_MSSQL/case2_diff_server/web
+      dockerfile: Dockerfile
+    container_name: task4-case2-web
+    ports:
+      - "8052:80"
+    environment:
+      MSSQL_HOST: task4-case2-mssql
+      MSSQL_USER: sa
+      MSSQL_PASSWORD: "P@ssw0rd123!"
+    depends_on:
+      - task4-case2-mssql
+    networks:
+      - task4-case2-net
+
+  task4-case2-mssql:
+    image: mcr.microsoft.com/mssql/server:2019-latest
+    container_name: task4-case2-mssql
+    ports:
+      - "14332:1433"
+    environment:
+      SA_PASSWORD: "P@ssw0rd123!"
+      ACCEPT_EULA: "Y"
+    volumes:
+      - ./Task4_RCE_MSSQL/case2_diff_server/db/init_db.sql:/docker-entrypoint-initdb.d/init.sql
+      - task4-case2-data:/var/opt/mssql/data
+    networks:
+      - task4-case2-net
+
+  # =============== Task5: RCE MySQL File ===============
+  task5-web:
+    build:
+      context: ./Task5_RCE_MySQL_File/web
+      dockerfile: Dockerfile
+    container_name: task5-web
+    ports:
+      - "8006:80"
+    environment:
+      DB_HOST: task5-db
+      DB_USER: root
+      DB_PASSWORD: password
+      DB_NAME: rce_file_db
+    depends_on:
+      - task5-db
+    volumes:
+      - task5-web-uploads:/var/www/html/uploads
+    networks:
+      - task5-net
+
+  task5-db:
+    image: mysql:8.0
+    container_name: task5-db
+    ports:
+      - "33066:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: rce_file_db
+    volumes:
+      - ./Task5_RCE_MySQL_File/db/custom_mysql.cnf:/etc/mysql/conf.d/mysql.cnf
+      - ./Task5_RCE_MySQL_File/db/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - task5-db-data:/var/lib/mysql
+    command: --secure-file-priv=""
+    networks:
+      - task5-net
+
+networks:
+  task2-net:
+  task3-net:
+  task4-case1-net:
+  task4-case2-net:
+  task5-net:
+
+volumes:
+  task2-db-data:
+  task3-db-data:
+  task4-case1-data:
+  task4-case2-data:
+  task5-db-data:
+  task5-web-uploads:
