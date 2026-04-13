@@ -13,15 +13,6 @@ To solve the lab, log in as the administrator user.
 ## Write-up
 
 Lab này giống lab time delay, nhưng phải lấy được password của administrator.
-
-Đầu tiên em test điều kiện delay:
-
 TrackingId=xyz'||(SELECT CASE WHEN (1=1) THEN pg_sleep(10) ELSE pg_sleep(0) END)--
-
 Sau đó đổi điều kiện để dò độ dài password, ví dụ LENGTH(password)>n cho user administrator. Request nào delay thì điều kiện đúng.
-
-Khi biết độ dài, em dò từng ký tự bằng SUBSTRING(password,pos,1) với tập a-z0-9. Nếu ký tự đoán đúng thì request sẽ delay 10 giây.
-
-Ghép đủ từng vị trí sẽ ra password đầy đủ, rồi dùng password đó login administrator.
-
-Lab này bản chất là boolean-based blind nhưng kênh side-channel là thời gian.
+Tương tự dò ra độ dài, sử dụng substr để tìm ra passowrd

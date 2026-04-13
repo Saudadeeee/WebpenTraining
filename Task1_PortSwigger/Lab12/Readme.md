@@ -13,15 +13,14 @@ To solve the lab, log in as the administrator user.
 ## Write-up
 
 Lab này vẫn là blind SQLi qua TrackingId, nhưng thay vì nhìn Welcome back thì mình dựa vào việc response có báo lỗi hay không.
-
+Dựa vào cheat sheet cho conditional error: ELECT CASE WHEN (YOUR-CONDITION-HERE) THEN TO_CHAR(1/0) ELSE NULL END FROM dual 
 Đầu tiên test payload kiểu điều kiện gây lỗi có kiểm soát:
-
 TrackingId=xyz'||(SELECT CASE WHEN (1=1) THEN TO_CHAR(1/0) ELSE '' END FROM dual)||'
 
 Nếu điều kiện true thì có lỗi, false thì không lỗi. Từ đó mình dùng đúng mẫu này để dò từng ký tự password của administrator.
+Đây là khi true: 
+![alt text](image.png)
+Đây là khi flase:
+![alt text](image-1.png)
 
-Tiếp theo em check độ dài password bằng cách thay điều kiện thành LENGTH(password)>n, rồi tăng n dần.
-
-Khi có độ dài, em brute force từng vị trí bằng SUBSTR(password,pos,1)='a'..'z' và '0'..'9'. Ký tự nào làm response báo lỗi đúng như điều kiện thì đó là ký tự thật.
-
-Lab này mấu chốt là biến lỗi DB thành tín hiệu True/False để đọc password từng ký tự.
+Và tương tự như các lab trên sau khi đã xác định được mệnh đề true/false.

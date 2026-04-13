@@ -1,8 +1,6 @@
--- Task 3: ROT13 SQL Injection Database Setup
 
 USE rot13_db;
 
--- Create products table
 CREATE TABLE products (
     id INT PRIMARY KEY AUTO_INCREMENT,
     name VARCHAR(255) NOT NULL,
@@ -11,8 +9,6 @@ CREATE TABLE products (
     stock INT,
     secret VARCHAR(255)
 );
-
--- Insert sample data
 INSERT INTO products (id, name, description, price, stock, secret) VALUES
 (1, 'Gaming Laptop', 'High-performance laptop for gaming', 1299.99, 15, 'FLAG{rot13_sqli_bypass_successful}'),
 (2, 'Wireless Mouse', 'Ergonomic wireless mouse', 29.99, 150, 'secret_mouse_2024'),
@@ -20,7 +16,6 @@ INSERT INTO products (id, name, description, price, stock, secret) VALUES
 (4, 'USB-C Hub', 'Multi-port USB-C hub', 49.99, 75, 'hub_secret_key'),
 (5, 'Monitor 4K', '27 inch 4K UHD monitor', 399.99, 20, 'monitor_license_2024');
 
--- Create admin_users table to demonstrate data extraction
 CREATE TABLE admin_users (
     id INT PRIMARY KEY AUTO_INCREMENT,
     username VARCHAR(100),
@@ -42,7 +37,6 @@ CREATE TABLE activity_logs (
     ip_address VARCHAR(45)
 );
 
--- Table with sensitive data for demonstration
 CREATE TABLE sensitive_data (
     id INT PRIMARY KEY AUTO_INCREMENT,
     api_key VARCHAR(255),
@@ -54,6 +48,5 @@ CREATE TABLE sensitive_data (
 INSERT INTO sensitive_data VALUES
 (1, 'dummy_live_dummyKey1234567890abcdef', 'OriginalDBPassword123!', 'PRIVATE_KEY_CONTENT_HERE', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9');
 
--- Indexes for performance
 CREATE INDEX idx_name ON products(name);
 CREATE INDEX idx_username ON admin_users(username);

@@ -16,8 +16,5 @@ Payload chính vẫn như các lab UNION:
 
 1 UNION SELECT username || '~' || password FROM users
 
-Do filter chặn ký tự, em encode payload sang XML entities (có thể dùng Hackvertor trong Burp) rồi gửi lại request.
-
-Khi bypass filter thành công, response sẽ trả về username/password, lấy account admin đăng nhập là solve.
-
-Lab này mấu chốt là bypass filter bằng XML encoding trước, sau đó mới chạy UNION như bình thường.
+Do filter chặn ký tự, em encode payload sang XML entities rồi gửi lại request.
+Khi bypass filter thành công, response sẽ trả về username/password

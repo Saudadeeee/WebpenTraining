@@ -16,8 +16,4 @@ Em sửa TrackingId để gọi sleep, ví dụ:
 
 TrackingId=xyz'||pg_sleep(10)--
 
-Khi gửi request mà response delay khoảng 10 giây thì xác nhận được SQLi.
-
-Mục tiêu lab chỉ cần tạo được delay 10s là xong, nên payload sleep chạy được là solve.
-
-Lab này mấu chốt là đo thời gian response thay cho nội dung response.
+Khi gửi request mà response delay khoảng 10 giây thì xác nhận được SQLi và từ đó xác định được true/false và làm tương tự
