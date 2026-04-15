@@ -1,17 +1,8 @@
 [mysqld]
-# MySQL configuration for secure file operations
 
-# Set secure_file_priv to allow writing anywhere
-# WARNING: This is extremely dangerous! Only for development/lab
 secure_file_priv=""
-
-# Allow loading local files
 local_infile=1
-
-# Performance settings
 max_connections=1000
 max_allowed_packet=256M
-
-# Binary logging
 log_bin=mysql-bin
 binlog_format=mixed

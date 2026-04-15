@@ -71,28 +71,25 @@ services:
       context: ./Task4_RCE_MSSQL/case1_same_server
       dockerfile: Dockerfile
     container_name: task4-case1-web
-    ports:
-      - "8051:80"
     environment:
-      MSSQL_SA_PASSWORD: "P@ssw0rd123!"
-      ACCEPT_EULA: "Y"
+      MSSQL_HOST: 127.0.0.1
+      MSSQL_USER: sa
+      MSSQL_PASSWORD: "P@ssw0rd123!"
     depends_on:
-      task4-case1-mssql:
-        condition: service_started
-    networks:
-      - task4-case1-net
+      - task4-case1-mssql
+    network_mode: "service:task4-case1-mssql"
 
   task4-case1-mssql:
     image: mcr.microsoft.com/mssql/server:2019-latest
     container_name: task4-case1-mssql
     ports:
+      - "8051:80"
       - "14331:1433"
     environment:
       SA_PASSWORD: "P@ssw0rd123!"
       ACCEPT_EULA: "Y"
     volumes:
       - ./Task4_RCE_MSSQL/case1_same_server/init_db.sql:/docker-entrypoint-initdb.d/init.sql
-      - task4-case1-data:/var/opt/mssql/data
     networks:
       - task4-case1-net
 
@@ -123,7 +120,6 @@ services:
       ACCEPT_EULA: "Y"
     volumes:
       - ./Task4_RCE_MSSQL/case2_diff_server/db/init_db.sql:/docker-entrypoint-initdb.d/init.sql
-      - task4-case2-data:/var/opt/mssql/data
     networks:
       - task4-case2-net
 
@@ -143,7 +139,7 @@ services:
     depends_on:
       - task5-db
     volumes:
-      - task5-web-uploads:/var/www/html/uploads
+      - task5-shared-uploads:/var/www/html/uploads
     networks:
       - task5-net
 
@@ -159,6 +155,7 @@ services:
       - ./Task5_RCE_MySQL_File/db/custom_mysql.cnf:/etc/mysql/conf.d/mysql.cnf
       - ./Task5_RCE_MySQL_File/db/init.sql:/docker-entrypoint-initdb.d/init.sql
       - task5-db-data:/var/lib/mysql
+      - task5-shared-uploads:/var/www/html/uploads
     command: --secure-file-priv=""
     networks:
       - task5-net
@@ -173,7 +170,5 @@ networks:
 volumes:
   task2-db-data:
   task3-db-data:
-  task4-case1-data:
-  task4-case2-data:
   task5-db-data:
-  task5-web-uploads:
+  task5-shared-uploads:

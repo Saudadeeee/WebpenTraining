@@ -1,14 +1,10 @@
-FROM mcr.microsoft.com/mssql/server:2019-latest AS mssql
-
-FROM php:7.4-cli
+FROM php:7.4-apache
 
 RUN apt-get update && \
     apt-get install -y \
-    apache2 \
     gcc \
     make \
     autoconf \
-    curl \
     libcurl4-openssl-dev \
     libssl-dev \
     sqlite3 \
@@ -24,7 +20,7 @@ RUN apt-get update && \
     docker-php-ext-install pdo_dblib && \
     rm -rf /var/lib/apt/lists/*
 
-# Enable Apache modules and install PDO extension
+# Enable Apache modules
 RUN a2enmod rewrite
 
 WORKDIR /var/www/html

@@ -1,8 +1,7 @@
--- Task 5: MySQL RCE via INTO OUTFILE Database Setup
+
 
 USE rce_file_db;
 
--- Create users table
 CREATE TABLE users (
     id INT PRIMARY KEY AUTO_INCREMENT,
     username VARCHAR(100),
@@ -11,13 +10,11 @@ CREATE TABLE users (
     is_admin BOOLEAN
 );
 
--- Insert sample data
 INSERT INTO users (username, email, password, is_admin) VALUES
 ('admin', 'admin@company.com', 'admin123', TRUE),
 ('user1', 'user1@company.com', 'password123', FALSE),
 ('user2', 'user2@company.com', 'password456', FALSE);
 
--- Create files table for demonstration
 CREATE TABLE uploaded_files (
     id INT PRIMARY KEY AUTO_INCREMENT,
     file_name VARCHAR(255),

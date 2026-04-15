@@ -1,48 +1,35 @@
--- Task 4 Case 2: Initialize MSSQL for remote RCE testing
+-- Task 4 Case 2: SQLi to RCE Lab (Linux-compatible)
+-- Note: Case 2 uses SQLi to tamper DB config, then diagnostics executes that value.
 
 USE master;
-
--- Enable advanced options
-EXEC sp_configure 'show advanced options', 1;
-RECONFIGURE;
-
--- Enable xp_cmdshell
-EXEC sp_configure 'xp_cmdshell', 1;
-RECONFIGURE;
 
 -- Create test database
-IF NOT EXISTS (SELECT name FROM sys.databases WHERE name = 'TestDB')
-BEGIN
-    CREATE DATABASE TestDB;
-END
+CREATE DATABASE rce_test;
 
--- Switch to TestDB
-USE TestDB;
+USE rce_test;
 
--- Create Users table
-IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'Users')
-BEGIN
-    CREATE TABLE Users (
-        ID INT PRIMARY KEY IDENTITY(1,1),
-        Username NVARCHAR(100),
-        Email NVARCHAR(100),
-        Password NVARCHAR(255),
-        AdminLevel INT
-    );
-END
+-- Create products table
+CREATE TABLE products (
+    id INT PRIMARY KEY IDENTITY(1,1),
+    product_name VARCHAR(100),
+    price DECIMAL(10, 2),
+    stock INT
+);
+
+CREATE TABLE app_config (
+    config_key VARCHAR(100) PRIMARY KEY,
+    config_value VARCHAR(255) NOT NULL
+);
 
 -- Insert sample data
-INSERT INTO Users (Username, Email, Password, AdminLevel) VALUES
-(N'Admin', N'admin@company.com', N'hashedpass123', 99),
-(N'User1', N'user1@company.com', N'hashedpass456', 1),
-(N'User2', N'user2@company.com', N'hashedpass789', 1);
+INSERT INTO products (product_name, price, stock) VALUES
+('Laptop', 999.99, 5),
+('Mouse', 25.50, 20),
+('Keyboard', 75.00, 15);
 
--- Grant execute permissions on xp_cmdshell to public
-GRANT EXEC ON master..xp_cmdshell TO public;
+INSERT INTO app_config (config_key, config_value) VALUES
+('diag_target', 'whoami');
 
--- Switch back to master
-USE master;
-
-PRINT 'MSSQL Server initialized for RCE testing'
-PRINT 'xp_cmdshell is ENABLED'
-PRINT 'TestDB created with Users table'
+PRINT 'Database initialized for Case 2 RCE Lab'
+PRINT 'SQL Injection endpoint: POST to /index.php with action=search&product_id=PAYLOAD'
+PRINT 'Diagnostics endpoint: POST to /index.php with action=diag'
